@@ -1,0 +1,27 @@
+version: 2
+jobs:
+  build:
+    docker:
+        - image: golang:1.8.1
+    working_directory: /go/src/github.com/FairyDevicesRD/morant
+    steps:
+        - checkout
+
+        - run:
+            name: preparation for golang
+            command: |
+                go get -d ./cmd/morant
+                go vet ./cmd/morant
+                go get github.com/golang/lint/golint
+                go get github.com/fzipp/gocyclo
+                test -z "$($GOPATH/bin/golint cmd/morant | tee /dev/stderr)"
+
+        - run:
+            name: golang test
+            command: |
+                gocyclo -over 15 .
+                go test ./cmd/morant
+                go build -o bin-morant ./cmd/morant && rm bin-morant
+
+
+        # TODO: test for wiki2db
